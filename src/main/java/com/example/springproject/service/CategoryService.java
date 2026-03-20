@@ -26,4 +26,10 @@ public class CategoryService {
     public Category findCategoryById(Long id) {
         return categoryRepository.findById(id).orElse(null);
     }
+
+    public void deleteCategoryById(Long id) {
+        Category category = findCategoryById(id);
+        categoryRepository.delete(category);
+    }
+
 }
