@@ -8,20 +8,18 @@ import lombok.Setter;
 import java.time.LocalDateTime;
 import java.util.List;
 
+@Getter
+@Setter
 @Entity
-@Table(name = "orders")
+@Table(name = "orders", schema = "public")
 public class Order {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
 
     private Long id;
 
-    @Getter
-    @Setter
     private LocalDateTime createdAt;
 
-    @Getter
-    @Setter
     private Double totalPrice;
 
     @OneToMany(mappedBy = "order")

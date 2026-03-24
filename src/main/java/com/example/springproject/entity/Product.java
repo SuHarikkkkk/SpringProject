@@ -4,6 +4,8 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
+@Getter
+@Setter
 @Entity
 public class Product {
     @Id
@@ -14,8 +16,7 @@ public class Product {
 
     private String description;
 
-    @Getter
-    @Setter
+
     private Double price;
 
     @ManyToOne
