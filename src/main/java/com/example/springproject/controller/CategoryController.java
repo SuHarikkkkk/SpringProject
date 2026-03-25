@@ -23,7 +23,7 @@ public class CategoryController {
 
     @GetMapping("/{id}")
     public Category getCategoryById(@PathVariable Long id) {
-        return categoryService.findCategoryById(id);
+        return categoryService.getCategoryById(id);
     }
 
     @PostMapping
