@@ -28,8 +28,8 @@ public class OrderController {
     }
 
     @PostMapping
-    public Order createOrder() {
-        return orderService.createOrder();
+    public Order createOrder(Order order) {
+        return orderService.saveOrder(order);
     }
 
     @PostMapping("/{orderId}/products/{productId}/{quantity}")

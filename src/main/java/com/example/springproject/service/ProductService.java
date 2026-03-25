@@ -23,6 +23,20 @@ public class ProductService {
         return productRepository.save(product);
     }
 
+    public Product updateProduct(Product product, Long id) {
+        Product oldProduct = getProductById(id);
+        if (oldProduct == null) {
+            throw new RuntimeException("Товар не найден");
+        }
+        oldProduct.setName(product.getName());
+        oldProduct.setDescription(product.getDescription());
+        oldProduct.setPrice(product.getPrice());
+        oldProduct.setCategory(product.getCategory());
+        oldProduct.setSeller(product.getSeller());
+        oldProduct.setStock(product.getStock());
+        return productRepository.save(oldProduct);
+    }
+
     public Product getProductById(Long id) {
         return productRepository.findById(id).orElse(null);
     }
