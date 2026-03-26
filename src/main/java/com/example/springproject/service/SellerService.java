@@ -49,7 +49,6 @@ public class SellerService {
     }
 
     public List<Product> getSellerProducts(Long id) {
-        Seller seller = getSellerById(id);
         return productService.getProductBySeller(id);
     }
 
