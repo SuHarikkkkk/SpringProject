@@ -2,6 +2,7 @@ package com.example.springproject.controller;
 
 import com.example.springproject.entity.Category;
 import com.example.springproject.service.CategoryService;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -17,22 +18,43 @@ public class CategoryController {
     }
 
     @GetMapping
-    List<Category> getAllCategories() {
-        return categoryService.getAllCategories();
+    public ResponseEntity<List<Category>> getAllCategories() {
+        List<Category> categories = categoryService.getAllCategories();
+        return ResponseEntity.ok().body(categories);
     }
 
     @GetMapping("/{id}")
-    public Category getCategoryById(@PathVariable Long id) {
-        return categoryService.getCategoryById(id);
+    public ResponseEntity<Category> getCategoryById(@PathVariable Long id) {
+        Category category = categoryService.getCategoryById(id);
+        if (category == null) {
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.ok().body(category);
     }
 
     @PostMapping
-    public Category saveCategory(@RequestBody Category category) {
-        return categoryService.saveCategory(category);
+    public ResponseEntity<Category> saveCategory(@RequestBody Category category) {
+        Category savedCategory = categoryService.saveCategory(category);
+        return ResponseEntity.ok().body(savedCategory);
+    }
+
+    @PutMapping
+    public ResponseEntity<Category> updateCategory(@RequestBody Category category, @PathVariable Long id) {
+        try {
+            Category updatedCategory = categoryService.updateCategory(category, id);
+            return ResponseEntity.ok().body(updatedCategory);
+        } catch (Exception e) {
+            return ResponseEntity.notFound().build();
+        }
     }
 
     @DeleteMapping("/{id}")
-    public void deleteCategory(@PathVariable Long id) {
+    public ResponseEntity<Void> deleteCategoryById(@PathVariable Long id) {
+        Category category = categoryService.getCategoryById(id);
+        if (category == null) {
+            return ResponseEntity.notFound().build();
+        }
         categoryService.deleteCategoryById(id);
+        return ResponseEntity.noContent().build();
     }
 }
