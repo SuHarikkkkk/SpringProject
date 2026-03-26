@@ -7,10 +7,12 @@ import com.example.springproject.entity.Product;
 import com.example.springproject.repository.CartItemRepository;
 import com.example.springproject.repository.CartRepository;
 import com.example.springproject.repository.ProductRepository;
+import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
+@Service
 public class CartService {
     private final CartRepository cartRepository;
     private final ProductRepository productRepository;

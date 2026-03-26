@@ -5,6 +5,7 @@ import com.example.springproject.repository.ProductRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class ProductService {
@@ -43,5 +44,9 @@ public class ProductService {
 
     public void deleteProduct(Long id) {
         productRepository.deleteById(id);
+    }
+
+    public List<Product> getProductBySeller(Long id) {
+        return productRepository.findAll().stream().filter(p -> p.getSeller() != null && p.getSeller().getId().equals(id)).collect(Collectors.toList());
     }
 }
