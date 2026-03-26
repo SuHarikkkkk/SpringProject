@@ -23,7 +23,7 @@ public class CartController {
         this.customerService = customerService;
     }
 
-    @GetMapping
+    @GetMapping("/{id}")
     public ResponseEntity<List<CartItem>> getCartItems(@RequestParam Long id) {
         Customer customer = customerService.getCustomerById(id);
         List<CartItem> cartItems = cartService.getCartItems(customer);
