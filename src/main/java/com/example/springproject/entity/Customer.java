@@ -13,11 +13,11 @@ import java.util.List;
 @Table(name = "customers")
 public class Customer extends User {
 
-    @OneToOne(mappedBy = "customer", cascade = CascadeType.ALL)
+    @OneToOne(mappedBy = "customer", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonIgnore
     private Cart cart;
 
-    @OneToMany(mappedBy = "customer")
+    @OneToMany(mappedBy = "customer", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonIgnore
     private List<Order> orders;
 

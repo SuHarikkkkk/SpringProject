@@ -36,6 +36,7 @@ public class Order {
     private int quantity;
 
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore
     private List<OrderItem> items = new ArrayList<>();
 
     private String shippingAddress;
