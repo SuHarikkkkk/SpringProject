@@ -1,7 +1,6 @@
 package com.example.springproject.service;
 
 import com.example.springproject.entity.User;
-import com.example.springproject.repository.UserRepository;
 import org.springframework.stereotype.Service;
 
 @Service
