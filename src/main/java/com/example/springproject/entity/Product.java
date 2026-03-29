@@ -1,5 +1,6 @@
 package com.example.springproject.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -18,8 +19,12 @@ public class Product {
     private int stock;
 
     @ManyToOne
+    @JoinColumn(name = "category_id")
+    @JsonIgnore
     private Category category;
 
     @ManyToOne
+    @JoinColumn(name = "seller_id")
+    @JsonIgnore
     private Seller seller;
 }
