@@ -50,7 +50,7 @@ public class UserController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<User> updateUser(@RequestBody User user, Long id) {
+    public ResponseEntity<User> updateUser(@RequestBody User user, @PathVariable Long id) {
         User updatedUser = userService.updateUser(user, id);
         if (updatedUser == null) {
             return ResponseEntity.notFound().build();
@@ -59,12 +59,12 @@ public class UserController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
-        User user = userService.getUserById(id);
-        if (user == null) {
-            return ResponseEntity.notFound().build();
+    public ResponseEntity<?> deleteUser(@PathVariable Long id) {
+        try {
+            userService.deleteUser(id);
+            return ResponseEntity.noContent().build();
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(null);
         }
-        userService.deleteUser(id);
-        return ResponseEntity.noContent().build();
     }
 }
