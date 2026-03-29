@@ -24,7 +24,7 @@ public class CartController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<List<CartItem>> getCartItems(@RequestParam Long id) {
+    public ResponseEntity<List<CartItem>> getCartItems(@PathVariable Long id) {
         Customer customer = customerService.getCustomerById(id);
         List<CartItem> cartItems = cartService.getCartItems(customer);
         return ResponseEntity.ok(cartItems);
@@ -38,7 +38,8 @@ public class CartController {
     }
 
     @GetMapping
-    public ResponseEntity<Cart> getOrCreateCart(Customer customer) {
+    public ResponseEntity<Cart> getOrCreateCart(@RequestParam Long id) {
+        Customer customer = customerService.getCustomerById(id);
         Cart cart = cartService.getOrCreateCart(customer);
         return ResponseEntity.ok().body(cart);
     }

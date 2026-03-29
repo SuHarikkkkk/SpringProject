@@ -68,7 +68,7 @@ public class SellerController {
     }
 
     @PostMapping("/{id}/products")
-    public ResponseEntity<Product> addProduct(@RequestBody Product product, Long id) {
+    public ResponseEntity<Product> addProduct(@RequestBody Product product, @PathVariable Long id) {
         try {
             Product savedProduct = sellerService.addProduct(id, product);
             return ResponseEntity.status(HttpStatus.CREATED).body(savedProduct);

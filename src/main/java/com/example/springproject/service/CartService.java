@@ -10,6 +10,7 @@ import com.example.springproject.repository.ProductRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -56,6 +57,9 @@ public class CartService {
             newItem.setCart(cart);
             newItem.setPrice(product.getPrice());
             cartItemRepository.save(newItem);
+            if (cart.getCartItems() == null) {
+                cart.setCartItems(new ArrayList<>());
+            }
             cart.getCartItems().add(newItem);
         }
         cartRepository.save(cart);
@@ -63,8 +67,8 @@ public class CartService {
     }
 
     @Transactional
-    public void removeItemFromCart(Long CartItemId) {
-        cartRepository.deleteById(CartItemId);
+    public void removeItemFromCart(Long cartItemId) {
+        cartItemRepository.deleteById(cartItemId);
     }
 
     @Transactional

@@ -27,8 +27,8 @@ public class OrderController {
         return ResponseEntity.ok(orders);
     }
 
-    @GetMapping("/id")
-    public ResponseEntity<Order> getOrderById(@RequestParam("id") Long id) {
+    @GetMapping("/{id}")
+    public ResponseEntity<Order> getOrderById(@PathVariable Long id) {
         Order order = orderService.getOrderById(id);
         if (order == null) {
             return ResponseEntity.notFound().build();
@@ -37,12 +37,14 @@ public class OrderController {
     }
 
     @GetMapping("/customer/{id}")
-    public ResponseEntity<List<Order>> getOrderByCustomer(@RequestBody Customer customer) {
+    public ResponseEntity<List<Order>> getOrderByCustomer(@PathVariable Long id) {
+        Customer customer = new Customer();
+        customer.setId(id);
         List<Order> orders = orderService.getOrdersByCustomer(customer);
         return ResponseEntity.ok(orders);
     }
 
-    @PostMapping
+    @PostMapping("/create")
     public ResponseEntity<Order> createOrderFromCart(@RequestParam Long id, @RequestParam String shippingAddress, @RequestParam String paymentMethod) {
         try {
             Customer customer = new Customer();
@@ -54,12 +56,11 @@ public class OrderController {
         }
     }
 
-    @PutMapping
-    public ResponseEntity<Order> updateOrderStatus(@RequestParam("id") Long id, @RequestParam("status") OrderStatus status) {
+    @PutMapping("/{id}/status")
+    public ResponseEntity<Order> updateOrderStatus(@PathVariable Long id, @RequestParam OrderStatus status) {
         try {
-            Order order = orderService.getOrderById(id);
-            order.setStatus(status);
-            return ResponseEntity.ok(order);
+            orderService.updateOrderStatus(id, status);
+            return ResponseEntity.ok().build();
         } catch (Exception e) {
             return ResponseEntity.notFound().build();
         }
