@@ -72,6 +72,7 @@ public class OrderController {
             orderService.cancelOrder(id);
             return ResponseEntity.ok().build();
         } catch (Exception e) {
+            e.printStackTrace();
             return ResponseEntity.notFound().build();
         }
     }

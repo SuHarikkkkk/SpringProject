@@ -24,6 +24,10 @@ public class ProductService {
         return productRepository.save(product);
     }
 
+    public List<Product> getProductsByCategory(Long id) {
+        return productRepository.findAll().stream().filter(p -> p.getCategory() != null && p.getCategory().getId().equals(id)).collect(Collectors.toList());
+    }
+
     public Product updateProduct(Product product, Long id) {
         Product oldProduct = getProductById(id);
         if (oldProduct == null) {

@@ -23,8 +23,8 @@ public class CartController {
         this.customerService = customerService;
     }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<List<CartItem>> getCartItems(@PathVariable Long id) {
+    @GetMapping("/items")
+    public ResponseEntity<List<CartItem>> getCartItems(@RequestParam Long id) {
         Customer customer = customerService.getCustomerById(id);
         List<CartItem> cartItems = cartService.getCartItems(customer);
         return ResponseEntity.ok(cartItems);
@@ -56,7 +56,7 @@ public class CartController {
     }
 
     @PutMapping("/item")
-    public ResponseEntity<CartItem> updateCartItemQuantity(Customer customer, Long id, int quantity) {
+    public ResponseEntity<CartItem> updateCartItemQuantity(@RequestParam Long id, @RequestParam int quantity) {
         try {
             CartItem cartItem = cartService.updateCartItemQuantity(id, quantity);
             if (cartItem == null) {
@@ -76,7 +76,7 @@ public class CartController {
     }
 
     @DeleteMapping("/item")
-    public ResponseEntity<Void> removeItemFromCart(Long id) {
+    public ResponseEntity<Void> removeItemFromCart(@RequestParam Long id) {
         try {
             cartService.removeItemFromCart(id);
             return ResponseEntity.noContent().build();
