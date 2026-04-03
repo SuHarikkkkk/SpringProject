@@ -20,7 +20,7 @@ public class Cart {
     private List<CartItem> cartItems = new ArrayList<>();
 
     @OneToOne
-    @JoinColumn(name = "customer_id")
+    @JoinColumn(name = "user_id")
     @JsonIgnore
-    private Customer customer;
+    private User user;
 }

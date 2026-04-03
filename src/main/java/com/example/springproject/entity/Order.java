@@ -23,7 +23,7 @@ public class Order {
     @ManyToOne
     @JoinColumn(name = "customer_id")
     @JsonIgnore
-    private Customer customer;
+    private User customer;
 
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
