@@ -26,6 +26,12 @@ public class OrderService {
         this.cartService = cartService;
     }
 
+    private void validateCustomer(User user) {
+        if (user == null || user.getRole() != Role.CUSTOMER) {
+            throw new RuntimeException("Заказы доступны только покупателю");
+        }
+    }
+
     public List<Order> getAllOrders() {
         return orderRepository.findAll();
     }
@@ -34,12 +40,14 @@ public class OrderService {
         return orderRepository.findById(id).orElse(null);
     }
 
-    public List<Order> getOrdersByCustomer(Customer customer) {
-        return orderRepository.findAll().stream().filter(x -> x.getCustomer()!= null && x.getCustomer().getId().equals(customer.getId())).collect(Collectors.toList());
+    public List<Order> getOrdersByCustomer(User user) {
+        validateCustomer(user);
+        return orderRepository.findAll().stream().filter(x -> x.getCustomer()!= null && x.getCustomer().getId().equals(user.getId())).collect(Collectors.toList());
     }
 
-    public Order createOrderFromCart(Customer customer, String shippingAddress, String paymentMethod) {
-        Cart cart = cartService.getOrCreateCart(customer);
+    public Order createOrderFromCart(User user, String shippingAddress, String paymentMethod) {
+        validateCustomer(user);
+        Cart cart = cartService.getOrCreateCart(user);
         List<CartItem> cartItems = cart.getCartItems();
 
         if (cartItems.isEmpty()) {
@@ -54,7 +62,7 @@ public class OrderService {
         }
 
         Order order = new Order();
-        order.setCustomer(customer);
+        order.setCustomer(user);
         order.setShippingAddress(shippingAddress);
         order.setPaymentMethod(paymentMethod);
         order.setCreatedAt(LocalDateTime.now());
@@ -68,8 +76,8 @@ public class OrderService {
             Product product = cartItem.getProduct();
 
             OrderItem orderItem = new OrderItem();
-            orderItem.setProduct(product);
             orderItem.setOrder(order);
+            orderItem.setProductId(product.getId());
             orderItem.setQuantity(cartItem.getQuantity());
             orderItem.setPrice(cartItem.getPrice() * cartItem.getQuantity());
             orderItem.setProductName(product.getName());
@@ -80,8 +88,9 @@ public class OrderService {
             totalPrice += orderItem.getPrice();
         }
         order.setTotalPrice(totalPrice);
+        order.setUpdatedAt(LocalDateTime.now());
         orderRepository.save(order);
-        cartService.clearCart(customer);
+        cartService.clearCart(user);
         return order;
     }
 
@@ -89,24 +98,31 @@ public class OrderService {
     @Transactional
     public void updateOrderStatus(Long orderId, OrderStatus orderStatus) {
         Order order = getOrderById(orderId);
+        if (order == null) {
+            throw new RuntimeException("Заказ не найден");
+        }
         OrderStatus oldStatus = order.getStatus();
         if (oldStatus == OrderStatus.CANCELLED || oldStatus == OrderStatus.DELIVERED) {
             throw new RuntimeException("Нельзя изменить статус доставленного или отменённого заказа");
         }
         order.setStatus(orderStatus);
         order.setUpdatedAt(LocalDateTime.now());
-        if (orderStatus == OrderStatus.CANCELLED && oldStatus != OrderStatus.CANCELLED) {
-            for (OrderItem item: order.getItems()) {
-                Product product = item.getProduct();
-                product.setStock(product.getStock() + item.getQuantity());
-                productRepository.save(product);
+        if (orderStatus == OrderStatus.CANCELLED) {
+            for (OrderItem item : order.getItems()) {
+                Product product = productRepository.findById(item.getProductId()).orElse(null);
+                if (product != null) {
+                    product.setStock(product.getStock() + item.getQuantity());
+                    productRepository.save(product);
+                }
             }
         }
-        orderRepository.save(order);
     }
 
     public void deleteOrder(Long id) {
         Order order = getOrderById(id);
+        if (order == null) {
+            throw new RuntimeException("Заказ не найден");
+        }
         if (order.getStatus() != OrderStatus.NEW) {
             throw new RuntimeException("Невозможно удалить активный заказ");
         }
@@ -116,6 +132,9 @@ public class OrderService {
     @Transactional
     public void cancelOrder(Long id) {
         Order order = getOrderById(id);
+        if (order == null) {
+            throw new RuntimeException("Заказ не найден");
+        }
         if (order.getStatus() == OrderStatus.DELIVERED) {
             throw new RuntimeException("Нельзя отменить доставленный заказ");
         }

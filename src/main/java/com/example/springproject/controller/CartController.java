@@ -2,9 +2,7 @@ package com.example.springproject.controller;
 
 import com.example.springproject.entity.Cart;
 import com.example.springproject.entity.CartItem;
-import com.example.springproject.entity.Customer;
 import com.example.springproject.service.CartService;
-import com.example.springproject.service.CustomerService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;

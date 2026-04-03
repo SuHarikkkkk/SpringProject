@@ -1,9 +1,6 @@
 package com.example.springproject.service;
 
-import com.example.springproject.entity.Cart;
-import com.example.springproject.entity.CartItem;
-import com.example.springproject.entity.Customer;
-import com.example.springproject.entity.Product;
+import com.example.springproject.entity.*;
 import com.example.springproject.repository.CartItemRepository;
 import com.example.springproject.repository.CartRepository;
 import com.example.springproject.repository.ProductRepository;
@@ -25,20 +22,29 @@ public class CartService {
         this.cartItemRepository = cartItemRepository;
     }
 
-    public Cart getOrCreateCart(Customer customer) {
+    private void validateCustomer(User user) {
+        if (user == null || user.getRole() != Role.CUSTOMER) {
+            throw new RuntimeException("Корзина доступна только покупателям");
+        }
+    }
+
+    public Cart getOrCreateCart(User user) {
+        validateCustomer(user);
         List<Cart> allCarts = cartRepository.findAll();
-        Cart cart = allCarts.stream().filter(c -> c.getCustomer() != null && c.getCustomer().getId().equals(customer.getId())).findFirst().orElse(null);
+        Cart cart = allCarts.stream().filter(c -> c.getUser() != null && c.getUser().getId().equals(user.getId())).findFirst().orElse(null);
         if (cart == null) {
             cart = new Cart();
-            cart.setCustomer(customer);
+            cart.setUser(user);
+            cart.setCartItems(new ArrayList<>());
             cartRepository.save(cart);
         }
         return cart;
     }
 
     @Transactional
-    public CartItem addItemToCart(Customer customer, Long productId, int quantity) {
-        Cart cart = getOrCreateCart(customer);
+    public CartItem addItemToCart(User user, Long productId, int quantity) {
+        validateCustomer(user);
+        Cart cart = getOrCreateCart(user);
         Product product = productRepository.findById(productId).orElseThrow(() -> new RuntimeException("Товар не найден"));
 
         if (product.getStock() < quantity) {
@@ -87,20 +93,23 @@ public class CartService {
     }
 
     @Transactional
-    public void clearCart(Customer customer) {
-        Cart cart = getOrCreateCart(customer);
+    public void clearCart(User user) {
+        validateCustomer(user);
+        Cart cart = getOrCreateCart(user);
         cartItemRepository.deleteAll(cart.getCartItems());
         cart.getCartItems().clear();
         cartRepository.save(cart);
     }
 
-    public Double getCartTotalPrice(Customer customer) {
-        Cart cart = getOrCreateCart(customer);
+    public Double getCartTotalPrice(User user) {
+        validateCustomer(user);
+        Cart cart = getOrCreateCart(user);
         return cart.getCartItems().stream().mapToDouble(item -> item.getPrice() * item.getQuantity()).sum();
     }
 
-    public List<CartItem> getCartItems(Customer customer) {
-        Cart cart = getOrCreateCart(customer);
+    public List<CartItem> getCartItems(User user) {
+        validateCustomer(user);
+        Cart cart = getOrCreateCart(user);
         return cart.getCartItems();
     }
 

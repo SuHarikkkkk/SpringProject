@@ -13,9 +13,6 @@ public class AuthService {
 
     public User login(String mail, String hashedPassword) {
         User user = userService.findUserByMail(mail);
-        if (user == null) {
-            throw new RuntimeException("Пользователь не найден");
-        }
         if (!hashedPassword.equals(user.getHashedPassword())) {
             throw new RuntimeException("Неверный пароль");
         }

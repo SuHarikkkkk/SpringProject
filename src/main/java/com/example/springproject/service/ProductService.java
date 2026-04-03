@@ -1,6 +1,7 @@
 package com.example.springproject.service;
 
 import com.example.springproject.entity.Product;
+import com.example.springproject.entity.Role;
 import com.example.springproject.repository.ProductRepository;
 import org.springframework.stereotype.Service;
 
@@ -21,6 +22,9 @@ public class ProductService {
     }
 
     public Product saveProduct(Product product) {
+        if (product.getSeller() == null || product.getSeller().getRole() != Role.SELLER) {
+            throw new RuntimeException("Товар может принадлежать только продавцу");
+        }
         return productRepository.save(product);
     }
 
@@ -33,6 +37,11 @@ public class ProductService {
         if (oldProduct == null) {
             throw new RuntimeException("Товар не найден");
         }
+
+        if (product.getSeller() != null && product.getSeller().getRole() != Role.SELLER) {
+            throw new RuntimeException("Товар может принадлежать только продавцу");
+        }
+
         oldProduct.setName(product.getName());
         oldProduct.setDescription(product.getDescription());
         oldProduct.setPrice(product.getPrice());

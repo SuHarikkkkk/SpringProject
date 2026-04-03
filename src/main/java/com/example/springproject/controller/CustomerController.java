@@ -1,8 +1,6 @@
 package com.example.springproject.controller;
 
-import com.example.springproject.entity.Customer;
 import com.example.springproject.entity.Order;
-import com.example.springproject.service.CustomerService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 

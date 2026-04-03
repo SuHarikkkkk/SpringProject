@@ -6,7 +6,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 public class UserService {
@@ -14,7 +13,6 @@ public class UserService {
     private final CartRepository cartRepository;
     private final CartItemRepository cartItemRepository;
     private final ProductRepository productRepository;
-    private final OrderItemRepository orderItemRepository;
 
     public UserService(UserRepository userRepository, CartRepository cartRepository, CartItemRepository cartItemRepository, ProductRepository productRepository, OrderItemRepository orderItemRepository) {
 
@@ -22,7 +20,6 @@ public class UserService {
         this.cartRepository = cartRepository;
         this.cartItemRepository = cartItemRepository;
         this.productRepository = productRepository;
-        this.orderItemRepository = orderItemRepository;
     }
 
     @Transactional
@@ -38,16 +35,8 @@ public class UserService {
         return userRepository.findAll().stream().filter(user -> user.getMail().equals(mail)).findFirst().orElseThrow(() -> new RuntimeException("Пользователь с такой почтой не найден"));
     }
 
-    public boolean existUserByMail(String mail) {
-        return userRepository.findAll().stream().anyMatch(user -> user.getMail().equals(mail));
-    }
-
     public User getUserById(Long id) {
-        return userRepository.findById(id).orElseThrow(() -> new RuntimeException("Пользователь с таким айди не найден"));
-    }
-
-    public List<User> getAllUsers() {
-        return userRepository.findAll();
+        return userRepository.findById(id).orElseThrow(() -> new RuntimeException("Пользователь не найден"));
     }
 
     @Transactional
@@ -56,29 +45,26 @@ public class UserService {
         user.setFirstName(userDetails.getFirstName());
         user.setLastName(userDetails.getLastName());
         user.setMail(userDetails.getMail());
+        user.setCompanyName(userDetails.getCompanyName());
         return userRepository.save(user);
     }
 
     @Transactional
     public void deleteUser(Long id) {
         User user = getUserById(id);
-        if (user instanceof Customer) {
-            Customer customer = (Customer) user;
-            if (customer.getCart() != null) {
-                cartItemRepository.deleteAll(customer.getCart().getCartItems());
-                cartRepository.delete(customer.getCart());
-            }
-        }
-        if (user instanceof Seller) {
-            Seller seller = (Seller) user;
-            List<Product> products = productRepository.findAll().stream().filter(product -> product.getSeller() != null && product.getSeller().getId().equals(seller.getId())).toList();
-            for (Product product : products) {
-                List<OrderItem> orderItems = orderItemRepository.findAll().stream().filter(oi -> oi.getProduct() != null && oi.getProduct().getId().equals(product.getId())).collect(Collectors.toList());
-                orderItemRepository.deleteAll(orderItems);
-                productRepository.delete(product);
+        if (user.getRole() == Role.CUSTOMER) {
+            Cart cart = cartRepository.findAll().stream().filter(c -> c.getUser() != null && c.getUser().getId().equals(user.getId())).findFirst().orElse(null);
+
+            if (cart != null) {
+                cartItemRepository.deleteAll(cart.getCartItems());
+                cartRepository.delete(cart);
             }
         }
 
+        if (user.getRole() == Role.SELLER) {
+            List<Product> products = productRepository.findAll().stream().filter(product -> product.getSeller() != null && product.getSeller().getId().equals(user.getId())).toList();
+            productRepository.deleteAll(products);
+        }
         userRepository.delete(user);
     }
 }
