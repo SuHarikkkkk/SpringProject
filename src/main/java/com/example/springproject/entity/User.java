@@ -1,5 +1,6 @@
 package com.example.springproject.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -16,6 +17,7 @@ public class User {
     @Column(nullable = false, unique = true)
     private String mail;
 
+    @JsonIgnore
     @Column(nullable = false)
     private String hashedPassword;
 

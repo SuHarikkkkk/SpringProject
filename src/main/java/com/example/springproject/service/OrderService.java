@@ -4,6 +4,9 @@ import com.example.springproject.entity.*;
 import com.example.springproject.repository.OrderItemRepository;
 import com.example.springproject.repository.OrderRepository;
 import com.example.springproject.repository.ProductRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -32,17 +35,13 @@ public class OrderService {
         }
     }
 
-    public List<Order> getAllOrders() {
-        return orderRepository.findAll();
-    }
-
     public Order getOrderById(Long id) {
         return orderRepository.findById(id).orElse(null);
     }
 
-    public List<Order> getOrdersByCustomer(User user) {
+    public Page<Order> getOrdersByCustomer(User user, Pageable pageable) {
         validateCustomer(user);
-        return orderRepository.findAll().stream().filter(x -> x.getCustomer()!= null && x.getCustomer().getId().equals(user.getId())).collect(Collectors.toList());
+        return orderRepository.findByCustomerId(user.getId(), pageable);
     }
 
     public Order createOrderFromCart(User user, String shippingAddress, String paymentMethod) {

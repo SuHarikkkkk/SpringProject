@@ -1,10 +1,13 @@
 package com.example.springproject.controller;
 
 import com.example.springproject.entity.*;
-import com.example.springproject.service.CartService;
 import com.example.springproject.service.OrderService;
+import com.example.springproject.service.UserService;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -14,76 +17,81 @@ import java.util.List;
 public class OrderController {
 
     private final OrderService orderService;
-    private final CartService cartService;
+    private final UserService userService;
 
-    public OrderController(OrderService orderService, CartService cartService) {
+    public OrderController(OrderService orderService, UserService userService) {
         this.orderService = orderService;
-        this.cartService = cartService;
+        this.userService = userService;
     }
 
-    @GetMapping
-    public ResponseEntity<List<Order>> getAllOrders() {
-        List<Order> orders = orderService.getAllOrders();
-        return ResponseEntity.ok(orders);
-    }
-
-    @GetMapping("/{id}")
-    public ResponseEntity<Order> getOrderById(@PathVariable Long id) {
-        Order order = orderService.getOrderById(id);
-        if (order == null) {
+    @PreAuthorize("hasAnyRole('CUSTOMER', 'ADMIN')")
+    @GetMapping("/{orderId}")
+    public ResponseEntity<Order> getOrderById(@PathVariable Long orderId) {
+        try {
+            Order order = orderService.getOrderById(orderId);
+            if (order == null) {
+                return ResponseEntity.notFound().build();
+            }
+            return ResponseEntity.ok(order);
+        } catch (RuntimeException e) {
             return ResponseEntity.notFound().build();
         }
-        return ResponseEntity.ok(order);
     }
 
-    @GetMapping("/customer/{id}")
-    public ResponseEntity<List<Order>> getOrderByCustomer(@PathVariable Long id) {
-        Customer customer = new Customer();
-        customer.setId(id);
-        List<Order> orders = orderService.getOrdersByCustomer(customer);
-        return ResponseEntity.ok(orders);
-    }
-
-    @PostMapping("/create")
-    public ResponseEntity<Order> createOrderFromCart(@RequestParam Long id, @RequestParam String shippingAddress, @RequestParam String paymentMethod) {
+    @PreAuthorize("hasAnyRole('CUSTOMER', 'ADMIN')")
+    @GetMapping("/user/{userId}")
+    public ResponseEntity<Page<Order>> getOrdersByUser(@PathVariable Long userId, Pageable pageable) {
         try {
-            Customer customer = new Customer();
-            customer.setId(id);
-            Order order = orderService.createOrderFromCart(customer, shippingAddress, paymentMethod);
+            User user = userService.getUserById(userId);
+            Page<Order> orders = orderService.getOrdersByCustomer(user, pageable);
+            return ResponseEntity.ok(orders);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().build();
+        }
+    }
+
+    @PreAuthorize("hasRole('CUSTOMER')")
+    @PostMapping("/{userId}/create")
+    public ResponseEntity<Order> createOrderFromCart(@PathVariable Long userId, @RequestParam String shippingAddress, @RequestParam String paymentMethod) {
+        try {
+            User user = userService.getUserById(userId);
+            Order order = orderService.createOrderFromCart(user, shippingAddress, paymentMethod);
             return ResponseEntity.status(HttpStatus.CREATED).body(order);
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().build();
         }
     }
 
-    @PutMapping("/{id}/status")
-    public ResponseEntity<Order> updateOrderStatus(@PathVariable Long id, @RequestParam OrderStatus status) {
+    @PreAuthorize("hasRole('ADMIN')")
+    @PutMapping("/{orderId}/status")
+    public ResponseEntity<Void> updateOrderStatus(@PathVariable Long orderId, @RequestParam OrderStatus status) {
         try {
-            orderService.updateOrderStatus(id, status);
+            orderService.updateOrderStatus(orderId, status);
             return ResponseEntity.ok().build();
-        } catch (Exception e) {
+        } catch (RuntimeException e) {
             return ResponseEntity.notFound().build();
         }
     }
 
-    @PutMapping("/{id}/cancel")
-    public ResponseEntity<Void> cancelOrder(@PathVariable Long id) {
+    @PreAuthorize("hasRole('CUSTOMER')")
+    @PostMapping("/{orderId}/cancel")
+    public ResponseEntity<Void> cancelOrder(@PathVariable Long orderId) {
         try {
-            orderService.cancelOrder(id);
+            orderService.cancelOrder(orderId);
             return ResponseEntity.ok().build();
-        } catch (Exception e) {
-            e.printStackTrace();
+        } catch (RuntimeException e) {
             return ResponseEntity.notFound().build();
         }
     }
 
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteOrder(@PathVariable Long id) {
-        Order order = orderService.getOrderById(id);
-        if (order == null) {
-            return ResponseEntity.notFound().build();
+    @PreAuthorize("hasRole('ADMIN')")
+    @DeleteMapping("/{orderId}")
+    public ResponseEntity<Void> deleteOrder(@PathVariable Long orderId) {
+        try {
+            orderService.deleteOrder(orderId);
+            return ResponseEntity.noContent().build();
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().build();
         }
-        orderService.deleteOrder(id);
-        return ResponseEntity.noContent().build();
     }
 }

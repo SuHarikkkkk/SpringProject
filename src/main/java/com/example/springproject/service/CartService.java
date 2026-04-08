@@ -69,7 +69,7 @@ public class CartService {
             cart.getCartItems().add(newItem);
         }
         cartRepository.save(cart);
-        return existingItem != null ? existingItem : cart.getCartItems().get(cart.getCartItems().size() - 1);
+        return existingItem != null ? existingItem : cart.getCartItems().getLast();
     }
 
     @Transactional

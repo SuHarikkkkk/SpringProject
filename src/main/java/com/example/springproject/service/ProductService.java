@@ -2,11 +2,13 @@ package com.example.springproject.service;
 
 import com.example.springproject.entity.Product;
 import com.example.springproject.entity.Role;
+import com.example.springproject.entity.User;
 import com.example.springproject.repository.ProductRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 public class ProductService {
@@ -17,8 +19,10 @@ public class ProductService {
         this.productRepository = productRepository;
     }
 
-    public List<Product> getAllProducts() {
-        return productRepository.findAll();
+
+
+    public Page<Product> getAllProducts(Pageable pageable) {
+        return productRepository.findAll(pageable);
     }
 
     public Product saveProduct(Product product) {
@@ -28,8 +32,8 @@ public class ProductService {
         return productRepository.save(product);
     }
 
-    public List<Product> getProductsByCategory(Long id) {
-        return productRepository.findAll().stream().filter(p -> p.getCategory() != null && p.getCategory().getId().equals(id)).collect(Collectors.toList());
+    public Page<Product> getProductsByCategory(Long id, Pageable pageable) {
+        return productRepository.findByCategoryId(id, pageable);
     }
 
     public Product updateProduct(Product product, Long id) {
@@ -59,7 +63,7 @@ public class ProductService {
         productRepository.deleteById(id);
     }
 
-    public List<Product> getProductBySeller(Long id) {
-        return productRepository.findAll().stream().filter(p -> p.getSeller() != null && p.getSeller().getId().equals(id)).collect(Collectors.toList());
+    public Page<Product> getProductBySeller(Long id, Pageable pageable) {
+        return productRepository.findBySellerId(id, pageable);
     }
 }

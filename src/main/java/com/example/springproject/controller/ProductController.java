@@ -3,11 +3,12 @@ package com.example.springproject.controller;
 
 import com.example.springproject.entity.Product;
 import com.example.springproject.service.ProductService;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/products")
@@ -18,58 +19,76 @@ public class ProductController {
         this.productService = productService;
     }
 
+    @PreAuthorize("hasAnyRole('CUSTOMER', 'ADMIN', 'SELLER')")
     @GetMapping
-    public ResponseEntity<List<Product>> getAllProducts() {
-        List<Product> products = productService.getAllProducts();
+    public ResponseEntity<Page<Product>> getAllProducts(Pageable pageable) {
+        Page<Product> products = productService.getAllProducts(pageable);
         return ResponseEntity.ok(products);
     }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<Product> getProductById(@PathVariable Long id) {
-        Product product = productService.getProductById(id);
+    @PreAuthorize("hasAnyRole('CUSTOMER', 'ADMIN', 'SELLER')")
+    @GetMapping("/{productId}")
+    public ResponseEntity<Product> getProductById(@PathVariable Long productId) {
+        Product product = productService.getProductById(productId);
         if (product == null) {
             return ResponseEntity.notFound().build();
         }
         return ResponseEntity.ok(product);
     }
 
-    @GetMapping("/category/{id}")
-    public ResponseEntity<List<Product>> getProductsByCategory(@PathVariable Long id) {
-        List<Product> products = productService.getProductsByCategory(id);
-        return ResponseEntity.ok(products);
-    }
-
-    @GetMapping("/seller/{id}")
-    public ResponseEntity<List<Product>> getProductBySellerId(@PathVariable Long id) {
-        List<Product> products = productService.getProductBySeller(id);
-        return ResponseEntity.ok(products);
-    }
-
-    @PostMapping
-    public ResponseEntity<Product> saveProduct(Product product) {
-        Product savedProduct = productService.saveProduct(product);
-        return ResponseEntity.status(HttpStatus.CREATED).body(savedProduct);
-    }
-
-    @PutMapping("/{id}")
-    public ResponseEntity<Product> updateProduct(@PathVariable Long id, @RequestBody Product product) {
+    @PreAuthorize("hasAnyRole('CUSTOMER', 'SELLER')")
+    @GetMapping("/category/{categoryId}")
+    public ResponseEntity<Page<Product>> getProductsByCategory(@PathVariable Long categoryId, Pageable pageable) {
         try {
-            Product updatedProduct = productService.updateProduct(product, id);
+            Page<Product> products = productService.getProductsByCategory(categoryId, pageable);
+            return ResponseEntity.ok(products);
+        } catch (RuntimeException e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+    @PreAuthorize("hasRole('SELLER')")
+    @GetMapping("/seller/{sellerId}")
+    public ResponseEntity<Page<Product>> getProductsBySellerId(@PathVariable Long sellerId, Pageable pageable) {
+        try {
+            Page<Product> products = productService.getProductBySeller(sellerId, pageable);
+            return ResponseEntity.ok(products);
+        } catch (RuntimeException e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+    @PreAuthorize("hasRole('SELLER')")
+    @PostMapping
+    public ResponseEntity<Product> saveProduct(@RequestBody Product product) {
+        try {
+            Product savedProduct = productService.saveProduct(product);
+            return ResponseEntity.status(HttpStatus.CREATED).body(savedProduct);
+        } catch (RuntimeException e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+    @PreAuthorize("hasRole('SELLER')")
+    @PutMapping("/{productId}")
+    public ResponseEntity<Product> updateProduct(@PathVariable Long productId, @RequestBody Product product) {
+        try {
+            Product updatedProduct = productService.updateProduct(product, productId);
             return ResponseEntity.ok(updatedProduct);
         } catch (Exception e) {
             return ResponseEntity.notFound().build();
         }
     }
 
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteProduct(@PathVariable Long id) {
-        Product product = productService.getProductById(id);
-        if (product == null) {
-            return ResponseEntity.notFound().build();
+    @PreAuthorize("hasAnyRole('SELLER', 'ADMIN')")
+    @DeleteMapping("/{productId}")
+    public ResponseEntity<Void> deleteProduct(@PathVariable Long productId) {
+        try {
+            productService.deleteProduct(productId);
+            return ResponseEntity.noContent().build();
+        }  catch (RuntimeException e) {
+            return ResponseEntity.badRequest().build();
         }
-        productService.deleteProduct(id);
-        return ResponseEntity.noContent().build();
     }
-
 }
 

@@ -2,7 +2,11 @@ package com.example.springproject.controller;
 
 import com.example.springproject.entity.Category;
 import com.example.springproject.service.CategoryService;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -17,44 +21,49 @@ public class CategoryController {
         this.categoryService = categoryService;
     }
 
+    @PreAuthorize("hasAnyRole('CUSTOMER', 'ADMIN', 'SELLER')")
     @GetMapping
-    public ResponseEntity<List<Category>> getAllCategories() {
-        List<Category> categories = categoryService.getAllCategories();
-        return ResponseEntity.ok().body(categories);
+    public ResponseEntity<Page<Category>> getAllCategories(Pageable pageable) {
+        Page<Category> categories = categoryService.getAllCategories(pageable);
+        return ResponseEntity.ok(categories);
     }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<Category> getCategoryById(@PathVariable Long id) {
-        Category category = categoryService.getCategoryById(id);
+    @PreAuthorize("hasAnyRole('CUSTOMER', 'ADMIN', 'SELLER')")
+    @GetMapping("/{categoryId}")
+    public ResponseEntity<Category> getCategoryById(@PathVariable Long categoryId) {
+        Category category = categoryService.getCategoryById(categoryId);
         if (category == null) {
             return ResponseEntity.notFound().build();
         }
         return ResponseEntity.ok().body(category);
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
+    @PutMapping("/{categoryId}")
+    public ResponseEntity<Category> updateCategory(@PathVariable Long categoryId, @RequestBody Category category) {
+        try {
+            Category updatedCategory = categoryService.updateCategory(category, categoryId);
+            return ResponseEntity.ok(updatedCategory);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().build();
+        }
+    }
+
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping
     public ResponseEntity<Category> saveCategory(@RequestBody Category category) {
         Category savedCategory = categoryService.saveCategory(category);
-        return ResponseEntity.ok().body(savedCategory);
+        return ResponseEntity.status(HttpStatus.CREATED).body(savedCategory);
     }
 
-    @PutMapping
-    public ResponseEntity<Category> updateCategory(@RequestBody Category category, @PathVariable Long id) {
+    @PreAuthorize("hasRole('ADMIN')")
+    @DeleteMapping("/{categoryId}")
+    public ResponseEntity<Void> deleteCategoryById(@PathVariable Long categoryId) {
         try {
-            Category updatedCategory = categoryService.updateCategory(category, id);
-            return ResponseEntity.ok().body(updatedCategory);
-        } catch (Exception e) {
+            categoryService.deleteCategoryById(categoryId);
+            return ResponseEntity.noContent().build();
+        } catch (RuntimeException e) {
             return ResponseEntity.notFound().build();
         }
-    }
-
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteCategoryById(@PathVariable Long id) {
-        Category category = categoryService.getCategoryById(id);
-        if (category == null) {
-            return ResponseEntity.notFound().build();
-        }
-        categoryService.deleteCategoryById(id);
-        return ResponseEntity.noContent().build();
     }
 }
