@@ -19,14 +19,12 @@ public class ProductController {
         this.productService = productService;
     }
 
-    @PreAuthorize("hasAnyRole('CUSTOMER', 'ADMIN', 'SELLER')")
     @GetMapping
     public ResponseEntity<Page<Product>> getAllProducts(Pageable pageable) {
         Page<Product> products = productService.getAllProducts(pageable);
         return ResponseEntity.ok(products);
     }
 
-    @PreAuthorize("hasAnyRole('CUSTOMER', 'ADMIN', 'SELLER')")
     @GetMapping("/{productId}")
     public ResponseEntity<Product> getProductById(@PathVariable Long productId) {
         Product product = productService.getProductById(productId);
@@ -36,7 +34,6 @@ public class ProductController {
         return ResponseEntity.ok(product);
     }
 
-    @PreAuthorize("hasAnyRole('CUSTOMER', 'SELLER')")
     @GetMapping("/category/{categoryId}")
     public ResponseEntity<Page<Product>> getProductsByCategory(@PathVariable Long categoryId, Pageable pageable) {
         try {

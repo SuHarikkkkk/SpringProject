@@ -58,8 +58,15 @@ public class OrderController {
             Order order = orderService.createOrderFromCart(user, shippingAddress, paymentMethod);
             return ResponseEntity.status(HttpStatus.CREATED).body(order);
         } catch (RuntimeException e) {
+            e.printStackTrace();
             return ResponseEntity.badRequest().build();
         }
+    }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @GetMapping
+    public ResponseEntity<Page<Order>> getAllOrders(Pageable pageable) {
+        return ResponseEntity.ok(orderService.getAllOrders(pageable));
     }
 
     @PreAuthorize("hasRole('ADMIN')")

@@ -35,6 +35,10 @@ public class OrderService {
         }
     }
 
+    public Page<Order> getAllOrders(Pageable pageable) {
+        return orderRepository.findAll(pageable);
+    }
+
     public Order getOrderById(Long id) {
         return orderRepository.findById(id).orElse(null);
     }
