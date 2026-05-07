@@ -7,12 +7,14 @@ import {
     updateProduct,
     deleteProduct,
 } from "../services/productService.js";
+import { getCategories } from "../services/categoryService.js";
 
 export function SellerProductsPage() {
     const rawUser = localStorage.getItem("user");
     const user = rawUser ? JSON.parse(rawUser) : null;
 
     const [products, setProducts] = useState([]);
+    const [categories, setCategories] = useState([]);
     const [pageData, setPageData] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
@@ -25,6 +27,7 @@ export function SellerProductsPage() {
         price: "",
         stock: "",
         imageUrl: "",
+        categoryId: "",
     });
 
     async function loadSellerProducts(page = 0) {
@@ -44,9 +47,14 @@ export function SellerProductsPage() {
             setLoading(true);
             setError("");
 
-            const data = await getProductsBySeller(user.id, page, 10);
-            setProducts(data.content || []);
-            setPageData(data);
+            const [productsData, categoriesData] = await Promise.all([
+                getProductsBySeller(user.id, page, 10),
+                getCategories(0, 100),
+            ]);
+
+            setProducts(productsData.content || []);
+            setPageData(productsData);
+            setCategories(categoriesData.content || []);
         } catch (err) {
             console.error(err);
             setError("Не удалось загрузить товары продавца");
@@ -74,6 +82,7 @@ export function SellerProductsPage() {
             price: product.price || "",
             stock: product.stock || "",
             imageUrl: product.imageUrl || "",
+            categoryId: product.category?.id || "",
         });
     }
 
@@ -85,6 +94,7 @@ export function SellerProductsPage() {
             price: "",
             stock: "",
             imageUrl: "",
+            categoryId: "",
         });
     }
 
@@ -99,6 +109,7 @@ export function SellerProductsPage() {
                 stock: Number(form.stock),
                 imageUrl: form.imageUrl,
                 seller: { id: user.id },
+                category: form.categoryId ? { id: Number(form.categoryId) } : null,
             };
 
             if (editingId) {
@@ -173,7 +184,9 @@ export function SellerProductsPage() {
                         </label>
 
                         <label className="block space-y-2">
-                            <span className="text-sm font-medium text-slate-700">Description</span>
+              <span className="text-sm font-medium text-slate-700">
+                Description
+              </span>
                             <textarea
                                 name="description"
                                 value={form.description}
@@ -205,7 +218,28 @@ export function SellerProductsPage() {
                         </label>
 
                         <label className="block space-y-2">
-                            <span className="text-sm font-medium text-slate-700">Image URL</span>
+              <span className="text-sm font-medium text-slate-700">
+                Category
+              </span>
+                            <select
+                                name="categoryId"
+                                value={form.categoryId}
+                                onChange={handleChange}
+                                className="w-full rounded-2xl border px-4 py-3"
+                            >
+                                <option value="">No category</option>
+                                {categories.map((category) => (
+                                    <option key={category.id} value={category.id}>
+                                        {category.name}
+                                    </option>
+                                ))}
+                            </select>
+                        </label>
+
+                        <label className="block space-y-2">
+              <span className="text-sm font-medium text-slate-700">
+                Image URL
+              </span>
                             <input
                                 name="imageUrl"
                                 value={form.imageUrl}
@@ -244,19 +278,30 @@ export function SellerProductsPage() {
                             <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                                 <div className="flex gap-4">
                                     <img
-                                        src={product.imageUrl || "https://placehold.co/200x200?text=No+Image"}
+                                        src={
+                                            product.imageUrl ||
+                                            "https://placehold.co/200x200?text=No+Image"
+                                        }
                                         alt={product.name || "Product"}
                                         className="h-24 w-24 rounded-2xl object-cover"
                                         onError={(e) => {
-                                            e.currentTarget.src = "https://placehold.co/200x200?text=No+Image";
+                                            e.currentTarget.src =
+                                                "https://placehold.co/200x200?text=No+Image";
                                         }}
                                     />
 
                                     <div>
-                                        <h3 className="font-semibold">{product.name || "Без названия"}</h3>
-                                        <p className="text-sm text-slate-500">{product.description || "Без описания"}</p>
+                                        <h3 className="font-semibold">
+                                            {product.name || "Без названия"}
+                                        </h3>
+                                        <p className="text-sm text-slate-500">
+                                            {product.description || "Без описания"}
+                                        </p>
                                         <p className="text-sm text-slate-600">
                                             ${product.price ?? 0} · Stock: {product.stock ?? 0}
+                                        </p>
+                                        <p className="text-sm text-slate-500">
+                                            Category: {product.category?.name || "No category"}
                                         </p>
                                     </div>
                                 </div>
@@ -283,7 +328,8 @@ export function SellerProductsPage() {
                     {pageData && (
                         <div className="flex items-center justify-between">
                             <div className="text-sm text-slate-500">
-                                Страница {pageData.number + 1} из {pageData.totalPages || 1}, всего товаров: {pageData.totalElements}
+                                Страница {pageData.number + 1} из {pageData.totalPages || 1},
+                                всего товаров: {pageData.totalElements}
                             </div>
 
                             <div className="flex gap-2">
