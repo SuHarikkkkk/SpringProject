@@ -1,15 +1,17 @@
 package com.example.springproject.controller;
 
-import com.example.springproject.entity.User;
+import com.example.springproject.dto.LoginDto;
+import com.example.springproject.dto.RegisterDto;
+import com.example.springproject.dto.UserDto;
 import com.example.springproject.service.AuthService;
 import com.example.springproject.service.UserService;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/auth")
 public class AuthController {
+
     private final AuthService authService;
     private final UserService userService;
 
@@ -19,20 +21,19 @@ public class AuthController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<User> register(@RequestBody User user) {
-        User registeredUser = userService.registerUser(user);
-        return ResponseEntity.status(HttpStatus.CREATED).body(registeredUser);
+    @ResponseStatus(HttpStatus.CREATED)
+    public UserDto register(@RequestBody RegisterDto dto) {
+        return userService.registerUser(dto);
     }
 
     @PostMapping("/login")
-    public ResponseEntity<User> login(@RequestParam String mail, @RequestParam String hashedPassword) {
-        User loginedUser = authService.login(mail, hashedPassword);
-        return ResponseEntity.ok(loginedUser);
+    public UserDto login(@RequestBody LoginDto dto) {
+        return authService.login(dto);
     }
 
     @PostMapping("/logout")
-    public ResponseEntity<Void> logout() {
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void logout() {
         authService.logout();
-        return ResponseEntity.noContent().build();
     }
 }

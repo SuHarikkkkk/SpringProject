@@ -82,7 +82,7 @@ export function SellerProductsPage() {
             price: product.price || "",
             stock: product.stock || "",
             imageUrl: product.imageUrl || "",
-            categoryId: product.category?.id || "",
+            categoryId: product.categoryId || "",
         });
     }
 
@@ -108,8 +108,8 @@ export function SellerProductsPage() {
                 price: Number(form.price),
                 stock: Number(form.stock),
                 imageUrl: form.imageUrl,
-                seller: { id: user.id },
-                category: form.categoryId ? { id: Number(form.categoryId) } : null,
+                sellerId: user.id,
+                categoryId: form.categoryId ? Number(form.categoryId) : null,
             };
 
             if (editingId) {
@@ -301,7 +301,7 @@ export function SellerProductsPage() {
                                             ${product.price ?? 0} · Stock: {product.stock ?? 0}
                                         </p>
                                         <p className="text-sm text-slate-500">
-                                            Category: {product.category?.name || "No category"}
+                                            Category: {product.categoryName || "No category"}
                                         </p>
                                     </div>
                                 </div>

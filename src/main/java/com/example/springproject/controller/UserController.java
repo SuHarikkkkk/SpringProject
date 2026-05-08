@@ -1,56 +1,51 @@
 package com.example.springproject.controller;
 
-import com.example.springproject.entity.User;
+import com.example.springproject.dto.UserDto;
+import com.example.springproject.dto.UserUpdateDto;
 import com.example.springproject.service.UserService;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/users")
 public class UserController {
+
     private final UserService userService;
 
     public UserController(UserService userService) {
         this.userService = userService;
     }
 
-    @PreAuthorize("hasAnyRole('CUSTOMER', 'ADMIN', 'SELLER')")
     @GetMapping("/{userId}")
-    public ResponseEntity<User> getById(@PathVariable Long userId) {
-        User user = userService.getUserById(userId);
-        if (user == null) {
-            return ResponseEntity.notFound().build();
-        }
-        return ResponseEntity.ok(user);
+    public UserDto getById(@PathVariable Long userId) {
+        return userService.getUserDtoById(userId);
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping
-    public ResponseEntity<Page<User>> getAllUsers(Pageable pageable) {
-        return ResponseEntity.ok(userService.getAllUsers(pageable));
+    public Page<UserDto> getAllUsers(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size
+    ) {
+        return userService.getAllUsers(page, size);
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
     @GetMapping("/mail/{mail}")
-    public ResponseEntity<User> getByMail(@PathVariable String mail) {
-        User user = userService.findUserByMail(mail);
-        return ResponseEntity.ok(user);
+    public UserDto getByMail(@PathVariable String mail) {
+        return userService.findUserDtoByMail(mail);
     }
 
-    @PreAuthorize("hasAnyRole('CUSTOMER', 'SELLER')")
     @PutMapping("/{userId}")
-    public ResponseEntity<User> update(@PathVariable Long userId, @RequestBody User user) {
-        User user1 = userService.updateUser(user, userId);
-        return ResponseEntity.ok(user1);
+    public UserDto update(
+            @PathVariable Long userId,
+            @RequestBody UserUpdateDto dto
+    ) {
+        return userService.updateUser(userId, dto);
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{userId}")
-    public ResponseEntity<Void> delete(@PathVariable Long userId) {
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void delete(@PathVariable Long userId) {
         userService.deleteUser(userId);
-        return ResponseEntity.noContent().build();
     }
 }
