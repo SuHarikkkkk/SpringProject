@@ -1,0 +1,7 @@
+$kind: http-request
+name: Clear Cart
+method: DELETE
+url: "{{baseUrl}}/carts/clear?id=7"
+queryParams:
+  id: "7"
+order: 4503599627369946

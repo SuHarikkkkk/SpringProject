@@ -1,0 +1,13 @@
+$kind: http-request
+name: Update Item Quantity
+method: PUT
+url: "{{baseUrl}}/carts/item?id=1&quantity=5"
+queryParams:
+  id: "1"
+  quantity: "5"
+order: 4503599627365528
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: ""

@@ -1,0 +1,15 @@
+$kind: http-request
+name: Update Customer
+method: PUT
+url: "{{baseUrl}}/customers/7"
+order: 4503599627322117
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "firstName": "Анна",
+      "lastName": "Петрова",
+      "mail": "anna12345678@mail.com"
+    }

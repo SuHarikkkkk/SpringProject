@@ -1,0 +1,5 @@
+$kind: http-request
+name: Get Seller by ID
+method: GET
+url: "{{baseUrl}}/sellers/2"
+order: 4503599107116860

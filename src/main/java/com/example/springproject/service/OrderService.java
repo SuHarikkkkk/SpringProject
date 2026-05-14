@@ -1,18 +1,20 @@
 package com.example.springproject.service;
 
+import com.example.springproject.dto.OrderCreateDto;
+import com.example.springproject.dto.OrderDto;
+import com.example.springproject.dto.OrderItemDto;
+import com.example.springproject.dto.OrderStatusUpdateDto;
 import com.example.springproject.entity.*;
 import com.example.springproject.repository.OrderItemRepository;
 import com.example.springproject.repository.OrderRepository;
 import com.example.springproject.repository.ProductRepository;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 public class OrderService {
@@ -22,7 +24,12 @@ public class OrderService {
     private final ProductRepository productRepository;
     private final CartService cartService;
 
-    public OrderService(OrderRepository orderRepository, OrderItemRepository orderItemRepository, ProductRepository productRepository, CartService cartService) {
+    public OrderService(
+            OrderRepository orderRepository,
+            OrderItemRepository orderItemRepository,
+            ProductRepository productRepository,
+            CartService cartService
+    ) {
         this.orderRepository = orderRepository;
         this.orderItemRepository = orderItemRepository;
         this.productRepository = productRepository;
@@ -35,30 +42,44 @@ public class OrderService {
         }
     }
 
-    public Page<Order> getAllOrders(Pageable pageable) {
-        return orderRepository.findAll(pageable);
+    public Page<OrderDto> getAllOrders(int page, int size) {
+        return orderRepository.findAll(PageRequest.of(page, size))
+                .map(this::toDto);
     }
 
-    public Order getOrderById(Long id) {
-        return orderRepository.findById(id).orElse(null);
+    public OrderDto getOrderById(Long id) {
+        Order order = orderRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Заказ не найден"));
+
+        return toDto(order);
     }
 
-    public Page<Order> getOrdersByCustomer(User user, Pageable pageable) {
+    private Order getOrderEntityById(Long id) {
+        return orderRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Заказ не найден"));
+    }
+
+    public Page<OrderDto> getOrdersByCustomer(User user, int page, int size) {
         validateCustomer(user);
-        return orderRepository.findByCustomerId(user.getId(), pageable);
+
+        return orderRepository.findByCustomerId(user.getId(), PageRequest.of(page, size))
+                .map(this::toDto);
     }
 
-    public Order createOrderFromCart(User user, String shippingAddress, String paymentMethod) {
+    @Transactional
+    public OrderDto createOrderFromCart(User user, OrderCreateDto dto) {
         validateCustomer(user);
-        Cart cart = cartService.getOrCreateCart(user);
+
+        Cart cart = cartService.getCartEntityForOrder(user);
         List<CartItem> cartItems = cart.getCartItems();
 
         if (cartItems.isEmpty()) {
-            throw  new RuntimeException("Нельзя создать заказ из пустой корзины");
+            throw new RuntimeException("Нельзя создать заказ из пустой корзины");
         }
 
         for (CartItem cartItem : cartItems) {
             Product product = cartItem.getProduct();
+
             if (product.getStock() < cartItem.getQuantity()) {
                 throw new RuntimeException("Недостаточное количество товара на складе. Доступно: " + product.getStock());
             }
@@ -66,12 +87,14 @@ public class OrderService {
 
         Order order = new Order();
         order.setCustomer(user);
-        order.setShippingAddress(shippingAddress);
-        order.setPaymentMethod(paymentMethod);
+        order.setShippingAddress(dto.shippingAddress());
+        order.setPaymentMethod(dto.paymentMethod());
         order.setCreatedAt(LocalDateTime.now());
+        order.setUpdatedAt(LocalDateTime.now());
         order.setStatus(OrderStatus.NEW);
         order.setTotalPrice(0.0);
-        orderRepository.save(order);
+
+        order = orderRepository.save(order);
 
         double totalPrice = 0.0;
 
@@ -81,66 +104,105 @@ public class OrderService {
             OrderItem orderItem = new OrderItem();
             orderItem.setOrder(order);
             orderItem.setProductId(product.getId());
+            orderItem.setProductName(product.getName());
             orderItem.setQuantity(cartItem.getQuantity());
             orderItem.setPrice(cartItem.getPrice() * cartItem.getQuantity());
-            orderItem.setProductName(product.getName());
+
             orderItemRepository.save(orderItem);
 
             product.setStock(product.getStock() - cartItem.getQuantity());
             productRepository.save(product);
+
             totalPrice += orderItem.getPrice();
         }
+
         order.setTotalPrice(totalPrice);
         order.setUpdatedAt(LocalDateTime.now());
-        orderRepository.save(order);
+
+        Order savedOrder = orderRepository.save(order);
+
         cartService.clearCart(user);
-        return order;
+
+        return toDto(savedOrder);
     }
 
-
     @Transactional
-    public void updateOrderStatus(Long orderId, OrderStatus orderStatus) {
-        Order order = getOrderById(orderId);
-        if (order == null) {
-            throw new RuntimeException("Заказ не найден");
-        }
+    public OrderDto updateOrderStatus(Long orderId, OrderStatusUpdateDto dto) {
+        Order order = getOrderEntityById(orderId);
+
         OrderStatus oldStatus = order.getStatus();
+
         if (oldStatus == OrderStatus.CANCELLED || oldStatus == OrderStatus.DELIVERED) {
             throw new RuntimeException("Нельзя изменить статус доставленного или отменённого заказа");
         }
-        order.setStatus(orderStatus);
+
+        order.setStatus(dto.status());
         order.setUpdatedAt(LocalDateTime.now());
-        if (orderStatus == OrderStatus.CANCELLED) {
+
+        if (dto.status() == OrderStatus.CANCELLED) {
             for (OrderItem item : order.getItems()) {
                 Product product = productRepository.findById(item.getProductId()).orElse(null);
+
                 if (product != null) {
                     product.setStock(product.getStock() + item.getQuantity());
                     productRepository.save(product);
                 }
             }
         }
+
+        return toDto(orderRepository.save(order));
     }
 
     public void deleteOrder(Long id) {
-        Order order = getOrderById(id);
-        if (order == null) {
-            throw new RuntimeException("Заказ не найден");
-        }
+        Order order = getOrderEntityById(id);
+
         if (order.getStatus() != OrderStatus.NEW) {
             throw new RuntimeException("Невозможно удалить активный заказ");
         }
+
         orderRepository.deleteById(id);
     }
 
     @Transactional
-    public void cancelOrder(Long id) {
-        Order order = getOrderById(id);
-        if (order == null) {
-            throw new RuntimeException("Заказ не найден");
-        }
+    public OrderDto cancelOrder(Long id) {
+        Order order = getOrderEntityById(id);
+
         if (order.getStatus() == OrderStatus.DELIVERED) {
             throw new RuntimeException("Нельзя отменить доставленный заказ");
         }
-        updateOrderStatus(id, OrderStatus.CANCELLED);
+
+        return updateOrderStatus(id, new OrderStatusUpdateDto(OrderStatus.CANCELLED));
+    }
+
+    private OrderDto toDto(Order order) {
+        List<OrderItemDto> items = order.getItems() == null
+                ? List.of()
+                : order.getItems()
+                .stream()
+                .map(this::toItemDto)
+                .toList();
+
+        return new OrderDto(
+                order.getId(),
+                order.getCustomer() != null ? order.getCustomer().getId() : null,
+                order.getCustomer() != null ? order.getCustomer().getMail() : null,
+                order.getShippingAddress(),
+                order.getPaymentMethod(),
+                order.getStatus(),
+                order.getTotalPrice(),
+                order.getCreatedAt(),
+                order.getUpdatedAt(),
+                items
+        );
+    }
+
+    private OrderItemDto toItemDto(OrderItem item) {
+        return new OrderItemDto(
+                item.getId(),
+                item.getProductId(),
+                item.getProductName(),
+                item.getQuantity(),
+                item.getPrice()
+        );
     }
 }

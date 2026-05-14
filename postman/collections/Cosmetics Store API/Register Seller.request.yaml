@@ -1,0 +1,17 @@
+$kind: http-request
+name: Register Seller
+method: POST
+url: "{{baseUrl}}/sellers"
+order: 4503599624576229
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "firstName": "Дмитрий",
+      "lastName": "Соколов",
+      "mail": "dmitry12345678901@shop.com",
+      "hashedPassword": "123",
+      "companyName": "ООО Магазин"
+    }

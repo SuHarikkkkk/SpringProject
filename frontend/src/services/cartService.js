@@ -13,14 +13,21 @@ export function getCartTotal(userId) {
 }
 
 export function addItemToCart(userId, productId, quantity) {
-    return apiFetch(`/carts/${userId}/items?productId=${productId}&quantity=${quantity}`, {
+    return apiFetch(`/carts/${userId}/items`, {
         method: "POST",
+        body: JSON.stringify({
+            productId,
+            quantity,
+        }),
     });
 }
 
 export function updateCartItemQuantity(cartItemId, quantity) {
-    return apiFetch(`/carts/items/${cartItemId}?quantity=${quantity}`, {
+    return apiFetch(`/carts/items/${cartItemId}`, {
         method: "PUT",
+        body: JSON.stringify({
+            quantity,
+        }),
     });
 }
 
@@ -31,7 +38,7 @@ export function removeCartItem(cartItemId) {
 }
 
 export function clearCart(userId) {
-    return apiFetch(`/carts/${userId}`, {
+    return apiFetch(`/carts/${userId}/clear`, {
         method: "DELETE",
     });
 }

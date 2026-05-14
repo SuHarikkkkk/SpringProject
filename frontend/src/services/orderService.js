@@ -5,12 +5,13 @@ export function getOrdersByUser(userId, page = 0, size = 10) {
 }
 
 export function createOrder(userId, shippingAddress, paymentMethod) {
-    return apiFetch(
-        `/orders/${userId}/create?shippingAddress=${encodeURIComponent(shippingAddress)}&paymentMethod=${encodeURIComponent(paymentMethod)}`,
-        {
-            method: "POST",
-        }
-    );
+    return apiFetch(`/orders/${userId}/create`, {
+        method: "POST",
+        body: JSON.stringify({
+            shippingAddress,
+            paymentMethod,
+        }),
+    });
 }
 
 export function cancelOrder(orderId) {
@@ -24,7 +25,10 @@ export function getAllOrders(page = 0, size = 10) {
 }
 
 export function updateOrderStatus(orderId, status) {
-    return apiFetch(`/orders/${orderId}/status?status=${status}`, {
+    return apiFetch(`/orders/${orderId}/status`, {
         method: "PUT",
+        body: JSON.stringify({
+            status,
+        }),
     });
 }

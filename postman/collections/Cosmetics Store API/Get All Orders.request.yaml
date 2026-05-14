@@ -1,0 +1,5 @@
+$kind: http-request
+name: Get All Orders
+method: GET
+url: '{{baseUrl}}/orders'
+order: 4503599614448562

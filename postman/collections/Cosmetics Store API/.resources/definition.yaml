@@ -1,0 +1,7 @@
+$kind: collection
+name: Cosmetics Store API
+description: REST API коллекция для интернет-магазина косметики на Spring Boot
+variables:
+  - key: baseUrl
+    value: 'http://localhost:8080'
+    type: default

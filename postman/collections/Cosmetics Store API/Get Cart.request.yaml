@@ -1,0 +1,7 @@
+$kind: http-request
+name: Get Cart
+method: GET
+url: "{{baseUrl}}/carts?id=2"
+queryParams:
+  id: "2"
+order: 4503599543287974

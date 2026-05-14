@@ -1,0 +1,14 @@
+$kind: http-request
+name: Add Item to Cart
+method: POST
+url: "{{baseUrl}}/carts/add?customerId=7&productId=5&quantity=1"
+queryParams:
+  customerId: "7"
+  productId: "5"
+  quantity: "1"
+order: 4503599626604067
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: ""
