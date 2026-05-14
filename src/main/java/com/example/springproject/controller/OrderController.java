@@ -63,6 +63,11 @@ public class OrderController {
         return orderService.updateOrderStatus(orderId, dto);
     }
 
+    @PostMapping("/{orderId}/pay")
+    public OrderDto payOrder(@PathVariable Long orderId) {
+        return orderService.payOrder(orderId);
+    }
+
     @PostMapping("/{orderId}/cancel")
     public OrderDto cancelOrder(@PathVariable Long orderId) {
         return orderService.cancelOrder(orderId);

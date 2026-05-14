@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { PageTitle } from "../components/layout/PageTitle.jsx";
 import { Card } from "../components/ui/Card.jsx";
-import { getOrdersByUser, cancelOrder } from "../services/orderService.js";
+import { getOrdersByUser, cancelOrder, payOrder } from "../services/orderService.js";
 
 export function OrdersPage() {
     const [orders, setOrders] = useState([]);
@@ -46,6 +46,17 @@ export function OrdersPage() {
         } catch (err) {
             console.error(err);
             alert("Не удалось отменить заказ");
+        }
+    }
+
+    async function handlePay(orderId) {
+        try {
+            await payOrder(orderId);
+            alert("Заказ оплачен");
+            await loadOrders(pageData?.number || 0);
+        } catch (err) {
+            console.error(err);
+            alert("Не удалось оплатить заказ");
         }
     }
 
@@ -99,12 +110,23 @@ export function OrdersPage() {
                   ${order.totalPrice ?? 0}
                 </span>
 
-                                <button
-                                    onClick={() => handleCancel(order.id)}
-                                    className="rounded-2xl border px-4 py-2 text-sm"
-                                >
-                                    Cancel
-                                </button>
+                                {order.status === "NEW" && (
+                                    <button
+                                        onClick={() => handlePay(order.id)}
+                                        className="rounded-2xl border px-4 py-2 text-sm"
+                                    >
+                                        Pay
+                                    </button>
+                                )}
+
+                                {order.status !== "CANCELLED" && order.status !== "DELIVERED" && (
+                                    <button
+                                        onClick={() => handleCancel(order.id)}
+                                        className="rounded-2xl border px-4 py-2 text-sm"
+                                    >
+                                        Cancel
+                                    </button>
+                                )}
                             </div>
                         </div>
                     </Card>

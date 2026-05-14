@@ -174,6 +174,20 @@ public class OrderService {
         return updateOrderStatus(id, new OrderStatusUpdateDto(OrderStatus.CANCELLED));
     }
 
+    @Transactional
+    public OrderDto payOrder(Long id) {
+        Order order = getOrderEntityById(id);
+
+        if (order.getStatus() != OrderStatus.NEW) {
+            throw new RuntimeException("Оплатить можно только новый заказ");
+        }
+
+        order.setStatus(OrderStatus.PAID);
+        order.setUpdatedAt(LocalDateTime.now());
+
+        return toDto(orderRepository.save(order));
+    }
+
     private OrderDto toDto(Order order) {
         List<OrderItemDto> items = order.getItems() == null
                 ? List.of()

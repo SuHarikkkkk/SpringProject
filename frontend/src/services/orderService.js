@@ -14,6 +14,12 @@ export function createOrder(userId, shippingAddress, paymentMethod) {
     });
 }
 
+export function payOrder(orderId) {
+    return apiFetch(`/orders/${orderId}/pay`, {
+        method: "POST",
+    });
+}
+
 export function cancelOrder(orderId) {
     return apiFetch(`/orders/${orderId}/cancel`, {
         method: "POST",
