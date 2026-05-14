@@ -1,14 +1,13 @@
 package com.example.springproject.service;
 
+import com.example.springproject.dto.CategoryCreateDto;
+import com.example.springproject.dto.CategoryDto;
 import com.example.springproject.entity.Category;
 import com.example.springproject.repository.CategoryRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 public class CategoryService {
@@ -19,47 +18,60 @@ public class CategoryService {
         this.categoryRepository = categoryRepository;
     }
 
-    public Page<Category> getAllCategories(Pageable pageable) {
-        return categoryRepository.findAll(pageable);
+    public Page<CategoryDto> getAllCategories(Pageable pageable) {
+        return categoryRepository.findAll(pageable)
+                .map(this::toDto);
     }
 
-    public Category getCategoryById(Long id) {
-        return categoryRepository.findById(id).orElse(null);
+    public CategoryDto getCategoryById(Long id) {
+        Category category = categoryRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Категория не найдена"));
+
+        return toDto(category);
     }
 
     @Transactional
-    public Category saveCategory(Category category) {
-        return categoryRepository.save(category);
+    public CategoryDto saveCategory(CategoryCreateDto dto) {
+        Category category = new Category();
+
+        category.setName(dto.name());
+        category.setDescription(dto.description());
+
+        Category savedCategory = categoryRepository.save(category);
+
+        return toDto(savedCategory);
     }
 
     @Transactional
-    public Category updateCategory(Category category, Long id) {
-        Category oldCategory = getCategoryById(id);
-        if (oldCategory == null) {
-            throw new RuntimeException("Категория не найдена");
-        }
-        oldCategory.setName(category.getName());
-        oldCategory.setDescription(category.getDescription());
-        return categoryRepository.save(oldCategory);
+    public CategoryDto updateCategory(CategoryCreateDto dto, Long id) {
+        Category category = categoryRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Категория не найдена"));
+
+        category.setName(dto.name());
+        category.setDescription(dto.description());
+
+        Category updatedCategory = categoryRepository.save(category);
+
+        return toDto(updatedCategory);
     }
 
     @Transactional
     public void deleteCategoryById(Long id) {
-        Category category = getCategoryById(id);
-        if (category == null) {
-            throw new RuntimeException("Категория не найдена");
-        }
+        Category category = categoryRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Категория не найдена"));
+
         if (category.getProducts() != null && !category.getProducts().isEmpty()) {
             throw new RuntimeException("Нельзя удалить категорию с товарами");
         }
+
         categoryRepository.delete(category);
     }
 
-    public List<Category> getCategoryByName(String name) {
-        return categoryRepository.findAll().stream().filter(category -> category.getName().toLowerCase().contains(name.toLowerCase())).collect(Collectors.toList());
-    }
-
-    public List<Category> getCategoriesWithProducts() {
-        return categoryRepository.findAll().stream().filter(category -> category.getProducts() != null && !category.getProducts().isEmpty()).collect(Collectors.toList());
+    private CategoryDto toDto(Category category) {
+        return new CategoryDto(
+                category.getId(),
+                category.getName(),
+                category.getDescription()
+        );
     }
 }
