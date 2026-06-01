@@ -27,11 +27,16 @@ export function ProductRow({ product, isSeller = false }) {
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div className="flex gap-4">
             <img
-                src={product.imageUrl || "https://placehold.co/300x200?text=No+Image"}
+                src={
+                  product.imageUrl
+                      ? `http://localhost:8080${product.imageUrl}`
+                      : "https://placehold.co/200x200?text=No+Image"
+                }
                 alt={product.name}
-                className="h-28 w-full rounded-2xl object-cover md:w-36"
+                className="h-24 w-24 rounded-2xl object-cover"
                 onError={(e) => {
-                  e.currentTarget.src = "https://placehold.co/300x200?text=No+Image";
+                  e.currentTarget.src =
+                      "https://placehold.co/200x200?text=No+Image";
                 }}
             />
 

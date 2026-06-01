@@ -73,7 +73,7 @@ export function ProductPage() {
         <div className="grid gap-6 lg:grid-cols-2">
           <Card>
             <img
-                src={product.imageUrl || "https://placehold.co/600x500?text=No+Image"}
+                src={`http://localhost:8080${product.imageUrl}`}
                 alt={product.name || "Product image"}
                 className="h-96 w-full rounded-3xl object-cover"
                 onError={(e) => {

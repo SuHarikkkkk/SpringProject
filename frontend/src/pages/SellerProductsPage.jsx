@@ -8,6 +8,7 @@ import {
     deleteProduct,
 } from "../services/productService.js";
 import { getCategories } from "../services/categoryService.js";
+import { uploadFile } from "../services/fileService.js";
 
 export function SellerProductsPage() {
     const rawUser = localStorage.getItem("user");
@@ -20,6 +21,7 @@ export function SellerProductsPage() {
     const [error, setError] = useState("");
 
     const [editingId, setEditingId] = useState(null);
+    const [imageFile, setImageFile] = useState(null);
 
     const [form, setForm] = useState({
         name: "",
@@ -102,14 +104,22 @@ export function SellerProductsPage() {
         e.preventDefault();
 
         try {
+            let imageUrl = form.imageUrl;
+
+            if (imageFile) {
+                imageUrl = await uploadFile(imageFile);
+            }
+
             const payload = {
                 name: form.name,
                 description: form.description,
                 price: Number(form.price),
                 stock: Number(form.stock),
-                imageUrl: form.imageUrl,
+                imageUrl,
                 sellerId: user.id,
-                categoryId: form.categoryId ? Number(form.categoryId) : null,
+                categoryId: form.categoryId
+                    ? Number(form.categoryId)
+                    : null,
             };
 
             if (editingId) {
@@ -237,13 +247,15 @@ export function SellerProductsPage() {
                         </label>
 
                         <label className="block space-y-2">
-              <span className="text-sm font-medium text-slate-700">
-                Image URL
-              </span>
+                            <span className="text-sm font-medium text-slate-700">
+                                Product Image
+                            </span>
                             <input
-                                name="imageUrl"
-                                value={form.imageUrl}
-                                onChange={handleChange}
+                                type="file"
+                                accept="image/*"
+                                onChange={(e) => {
+                                    setImageFile(e.target.files[0]);
+                                }}
                                 className="w-full rounded-2xl border px-4 py-3"
                             />
                         </label>
@@ -279,8 +291,9 @@ export function SellerProductsPage() {
                                 <div className="flex gap-4">
                                     <img
                                         src={
-                                            product.imageUrl ||
-                                            "https://placehold.co/200x200?text=No+Image"
+                                            product.imageUrl
+                                                ? `http://localhost:8080${product.imageUrl}`
+                                                : "https://placehold.co/200x200?text=No+Image"
                                         }
                                         alt={product.name || "Product"}
                                         className="h-24 w-24 rounded-2xl object-cover"
