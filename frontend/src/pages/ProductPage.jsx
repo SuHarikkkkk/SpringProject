@@ -99,7 +99,9 @@ export function ProductPage() {
                 <>
                   <div className="mt-6 w-40">
                     <label className="block space-y-2">
-                      <span className="text-sm font-medium text-slate-700">Quantity</span>
+                <span className="text-sm font-medium text-slate-700">
+                    Quantity
+                </span>
                       <input
                           type="number"
                           min="1"
@@ -120,15 +122,6 @@ export function ProductPage() {
                   </div>
                 </>
             )}
-
-            <div className="mt-6 flex gap-3">
-              {!isSeller && (
-                  <Button onClick={handleAddToCart}>
-                    Add to cart
-                  </Button>
-              )}
-
-            </div>
           </Card>
         </div>
       </div>

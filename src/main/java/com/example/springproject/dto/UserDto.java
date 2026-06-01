@@ -8,6 +8,7 @@ public record UserDto(
         String firstName,
         String lastName,
         Role role,
-        String companyName
+        String companyName,
+        boolean banned
 ) {
 }

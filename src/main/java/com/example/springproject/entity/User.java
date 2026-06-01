@@ -33,4 +33,6 @@ public class User {
     private Role role;
 
     private String companyName;
+
+    private boolean banned = false;
 }

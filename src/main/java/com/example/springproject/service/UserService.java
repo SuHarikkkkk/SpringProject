@@ -140,7 +140,24 @@ public class UserService {
                 user.getFirstName(),
                 user.getLastName(),
                 user.getRole(),
-                user.getCompanyName()
+                user.getCompanyName(),
+                user.isBanned()
         );
+    }
+
+    public void banUser(Long userId) {
+        User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("Пользователь не найден"));
+
+        user.setBanned(true);
+
+        userRepository.save(user);
+    }
+
+    public void unbanUser(Long userId) {
+        User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("Пользователь не найден"));
+
+        user.setBanned(false);
+
+        userRepository.save(user);
     }
 }

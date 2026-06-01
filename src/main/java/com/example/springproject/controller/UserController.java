@@ -43,6 +43,16 @@ public class UserController {
         return userService.updateUser(userId, dto);
     }
 
+    @PatchMapping("/{id}/ban")
+    public void banUser(@PathVariable Long id) {
+        userService.banUser(id);
+    }
+
+    @PatchMapping("/{id}/unban")
+    public void unbanUser(@PathVariable Long id) {
+        userService.unbanUser(id);
+    }
+
     @DeleteMapping("/{userId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void delete(@PathVariable Long userId) {

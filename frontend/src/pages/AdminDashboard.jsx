@@ -11,6 +11,11 @@ import {
     deleteCategory,
 } from "../services/categoryService.js";
 
+import {
+    banUser,
+    unbanUser
+} from "../services/userService.js";
+
 export function AdminDashboard() {
     const rawUser = localStorage.getItem("user");
     const user = rawUser ? JSON.parse(rawUser) : null;
@@ -46,10 +51,10 @@ export function AdminDashboard() {
 
             const [usersData, ordersData, productsData, categoriesData] =
                 await Promise.all([
-                    getUsers(0, 10),
-                    getAllOrders(0, 10),
-                    getProducts(0, 10),
-                    getCategories(0, 10),
+                    getUsers(0, 100),
+                    getAllOrders(0, 100),
+                    getProducts(0, 100),
+                    getCategories(0, 100),
                 ]);
 
             setUsers(usersData.content || []);
@@ -75,6 +80,26 @@ export function AdminDashboard() {
         } catch (err) {
             console.error(err);
             alert("Не удалось удалить пользователя");
+        }
+    }
+
+    async function handleBan(userId) {
+        try {
+            await banUser(userId);
+            await loadAdminData();
+        } catch (err) {
+            console.error(err);
+            alert("Не удалось заблокировать пользователя");
+        }
+    }
+
+    async function handleUnban(userId) {
+        try {
+            await unbanUser(userId);
+            await loadAdminData();
+        } catch (err) {
+            console.error(err);
+            alert("Не удалось разблокировать пользователя");
         }
     }
 
@@ -198,12 +223,26 @@ export function AdminDashboard() {
                                     </p>
                                 </div>
 
-                                <button
-                                    onClick={() => handleDeleteUser(item.id)}
-                                    className="rounded-2xl border px-4 py-2"
-                                >
-                                    Delete
-                                </button>
+                                <div className="flex gap-2">
+                                    {item.role !== "ADMIN" && (
+                                        item.banned ? (
+                                            <button onClick={() => handleUnban(item.id)}>
+                                                Unban
+                                            </button>
+                                        ) : (
+                                            <button onClick={() => handleBan(item.id)}>
+                                                Ban
+                                            </button>
+                                        )
+                                    )}
+
+                                    <button
+                                        onClick={() => handleDeleteUser(item.id)}
+                                        className="rounded-2xl border px-4 py-2"
+                                    >
+                                        Delete
+                                    </button>
+                                </div>
                             </div>
                         ))}
                     </div>

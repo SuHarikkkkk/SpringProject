@@ -11,6 +11,18 @@ export function updateUser(userId, userData) {
     });
 }
 
+export function banUser(userId) {
+    return apiFetch(`/users/${userId}/ban`, {
+        method: "PATCH",
+    });
+}
+
+export function unbanUser(userId) {
+    return apiFetch(`/users/${userId}/unban`, {
+        method: "PATCH",
+    });
+}
+
 export function getUsers(page = 0, size = 10) {
     return apiFetch(`/users?page=${page}&size=${size}`);
 }
@@ -19,4 +31,6 @@ export function deleteUser(userId) {
     return apiFetch(`/users/${userId}`, {
         method: "DELETE",
     });
+
+
 }

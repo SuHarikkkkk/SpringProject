@@ -17,6 +17,10 @@ public class AuthService {
     public UserDto login(LoginDto dto) {
         User user = userService.findUserByMail(dto.mail());
 
+        if (user.isBanned()) {
+            throw new RuntimeException("Ваш аккаунт заблокирован");
+        }
+
         if (!dto.hashedPassword().equals(user.getHashedPassword())) {
             throw new RuntimeException("Неверный пароль");
         }
