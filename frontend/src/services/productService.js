@@ -35,3 +35,29 @@ export function deleteProduct(productId) {
         method: "DELETE",
     });
 }
+
+export function searchProducts(
+    search,
+    categoryId,
+    page = 0,
+    size = 10,
+    sort = "newest"
+) {
+    const params = new URLSearchParams();
+
+    if (search) {
+        params.append("search", search);
+    }
+
+    if (categoryId) {
+        params.append("categoryId", categoryId);
+    }
+
+    params.append("page", page);
+    params.append("size", size);
+    params.append("sort", sort);
+
+    return apiFetch(
+        `/products/search?${params.toString()}`
+    );
+}

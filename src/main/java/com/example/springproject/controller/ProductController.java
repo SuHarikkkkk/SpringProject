@@ -49,6 +49,17 @@ public class ProductController {
         return productService.getProductsBySeller(sellerId, page, size);
     }
 
+    @GetMapping("/search")
+    public Page<ProductDto> searchProducts(
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false) Long categoryId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "newest") String sort
+    ) {
+        return productService.searchProducts(search, categoryId, page, size, sort);
+    }
+
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public ProductDto createProduct(@RequestBody ProductCreateDto dto) {

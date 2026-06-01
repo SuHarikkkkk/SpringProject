@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 import { Card } from "../ui/Card.jsx";
 import { addItemToCart } from "../../services/cartService.js";
 
-export function ProductRow({ product }) {
+export function ProductRow({ product, isSeller = false }) {
   async function handleAddToCart() {
     const rawUser = localStorage.getItem("user");
 
@@ -39,7 +39,7 @@ export function ProductRow({ product }) {
               <div className="mb-2 flex flex-wrap items-center gap-2">
                 <h3 className="text-lg font-semibold">{product.name || "Без названия"}</h3>
                 <span className="rounded-full bg-slate-100 px-3 py-1 text-xs">
-                {product.category?.name || "No category"}
+                {product.categoryName || "No category"}
               </span>
               </div>
 
@@ -60,12 +60,14 @@ export function ProductRow({ product }) {
                 View
               </Link>
 
-              <button
-                  onClick={handleAddToCart}
-                  className="rounded-2xl bg-slate-900 px-4 py-2 text-sm text-white"
-              >
-                Add to cart
-              </button>
+              {!isSeller && (
+                  <button
+                      onClick={handleAddToCart}
+                      className="rounded-2xl bg-slate-900 px-4 py-2 text-sm text-white"
+                  >
+                    Add to cart
+                  </button>
+              )}
             </div>
           </div>
         </div>

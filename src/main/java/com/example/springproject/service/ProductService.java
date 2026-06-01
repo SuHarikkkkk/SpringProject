@@ -12,6 +12,9 @@ import com.example.springproject.repository.UserRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
+import com.example.springproject.repository.CartItemRepository;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.data.domain.Sort;
 
 @Service
 public class ProductService {
@@ -19,15 +22,18 @@ public class ProductService {
     private final ProductRepository productRepository;
     private final UserRepository userRepository;
     private final CategoryRepository categoryRepository;
+    private final CartItemRepository cartItemRepository;
 
     public ProductService(
             ProductRepository productRepository,
             UserRepository userRepository,
-            CategoryRepository categoryRepository
+            CategoryRepository categoryRepository,
+            CartItemRepository cartItemRepository
     ) {
         this.productRepository = productRepository;
         this.userRepository = userRepository;
         this.categoryRepository = categoryRepository;
+        this.cartItemRepository = cartItemRepository;
     }
 
     public Page<ProductDto> getAllProducts(int page, int size) {
@@ -111,8 +117,14 @@ public class ProductService {
         return toDto(savedProduct);
     }
 
+    @Transactional
     public void deleteProduct(Long id) {
-        productRepository.deleteById(id);
+        Product product = productRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Товар не найден"));
+
+        cartItemRepository.deleteByProductId(id);
+
+        productRepository.delete(product);
     }
 
     private ProductDto toDto(Product product) {
@@ -141,5 +153,37 @@ public class ProductService {
                 categoryName,
                 sellerId
         );
+    }
+
+    public Page<ProductDto> searchProducts(String search, Long categoryId, int page, int size, String sort) {
+        Sort sorting = Sort.by("id").descending();
+
+        if ("priceAsc".equals(sort)) {
+            sorting = Sort.by("price").ascending();
+        }
+
+        if ("priceDesc".equals(sort)) {
+            sorting = Sort.by("price").descending();
+        }
+
+        PageRequest pageable = PageRequest.of(page, size, sorting);
+
+        boolean hasSearch = search != null && !search.isBlank();
+
+        boolean hasCategory = categoryId != null;
+
+        if (!hasSearch && !hasCategory) {
+            return productRepository.findAll(pageable).map(this::toDto);
+        }
+
+        if (hasSearch && !hasCategory) {
+            return productRepository.findByNameContainingIgnoreCase(search, pageable).map(this::toDto);
+        }
+
+        if (!hasSearch) {
+            return productRepository.findByCategoryId(categoryId, pageable).map(this::toDto);
+        }
+
+        return productRepository.findByNameContainingIgnoreCaseAndCategoryId(search, categoryId, pageable).map(this::toDto);
     }
 }

@@ -61,6 +61,11 @@ export function ProductPage() {
     return <p>Товар не найден</p>;
   }
 
+  const rawUser = localStorage.getItem("user");
+  const user = rawUser ? JSON.parse(rawUser) : null;
+
+  const isSeller = user?.role === "SELLER";
+
   return (
       <div>
         <PageTitle title="Product Details" subtitle="Detailed page for a selected cosmetic product." />
@@ -90,30 +95,39 @@ export function ProductPage() {
 
             <p className="mt-5 text-2xl font-semibold">${product.price ?? 0}</p>
 
-            <div className="mt-6 w-40">
-              <label className="block space-y-2">
-                <span className="text-sm font-medium text-slate-700">Quantity</span>
-                <input
-                    type="number"
-                    min="1"
-                    value={quantity}
-                    onChange={(e) => setQuantity(Number(e.target.value))}
-                    className="w-full rounded-2xl border px-4 py-3"
-                />
-              </label>
-            </div>
+            {!isSeller && (
+                <>
+                  <div className="mt-6 w-40">
+                    <label className="block space-y-2">
+                      <span className="text-sm font-medium text-slate-700">Quantity</span>
+                      <input
+                          type="number"
+                          min="1"
+                          value={quantity}
+                          onChange={(e) => setQuantity(Number(e.target.value))}
+                          className="w-full rounded-2xl border px-4 py-3"
+                      />
+                    </label>
+                  </div>
+
+                  <div className="mt-6 flex gap-3">
+                    <button
+                        onClick={handleAddToCart}
+                        className="rounded-2xl bg-slate-900 px-5 py-3 text-white"
+                    >
+                      Add to cart
+                    </button>
+                  </div>
+                </>
+            )}
 
             <div className="mt-6 flex gap-3">
-              <button
-                  onClick={handleAddToCart}
-                  className="rounded-2xl bg-slate-900 px-5 py-3 text-white"
-              >
-                Add to cart
-              </button>
+              {!isSeller && (
+                  <Button onClick={handleAddToCart}>
+                    Add to cart
+                  </Button>
+              )}
 
-              <button className="rounded-2xl border px-5 py-3">
-                Buy now
-              </button>
             </div>
           </Card>
         </div>

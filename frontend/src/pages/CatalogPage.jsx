@@ -4,7 +4,7 @@ import { PageTitle } from "../components/layout/PageTitle.jsx";
 import { Card } from "../components/ui/Card.jsx";
 import { SelectField } from "../components/ui/SelectField.jsx";
 import { ProductRow } from "../components/product/ProductRow.jsx";
-import { getProducts } from "../services/productService.js";
+import { searchProducts } from "../services/productService.js";
 
 export function CatalogPage() {
     const [products, setProducts] = useState([]);
@@ -12,13 +12,35 @@ export function CatalogPage() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
     const [page, setPage] = useState(0);
+    const [search, setSearch] = useState("");
+    const [category, setCategory] = useState("All");
+    const [sort, setSort] = useState("Newest");
+
+    const categoryMap = {
+        All: null,
+        Skincare: 1,
+        Makeup: 2,
+        Cleansing: 3
+    };
 
     useEffect(() => {
         setLoading(true);
         setError("");
 
-        getProducts(page, 10)
+        searchProducts(
+            search,
+            categoryMap[category],
+            page,
+            10,
+            sort === "Price: low to high"
+                ? "priceAsc"
+                : sort === "Price: high to low"
+                    ? "priceDesc"
+                    : "newest"
+        )
             .then((data) => {
+                console.log("DATA:", data);
+
                 setProducts(data.content || []);
                 setPageData(data);
             })
@@ -29,7 +51,7 @@ export function CatalogPage() {
             .finally(() => {
                 setLoading(false);
             });
-    }, [page]);
+    }, [page, search, sort, category]);
 
     function goToPrevPage() {
         if (page > 0) {
@@ -43,6 +65,11 @@ export function CatalogPage() {
         }
     }
 
+    const rawUser = localStorage.getItem("user");
+    const user = rawUser ? JSON.parse(rawUser) : null;
+
+    const isSeller = user?.role === "SELLER";
+
     return (
         <div>
             <PageTitle
@@ -54,7 +81,12 @@ export function CatalogPage() {
                 <Card className="md:col-span-2">
                     <div className="flex items-center gap-3 rounded-2xl border px-4 py-3">
                         <Search className="h-4 w-4 text-slate-500" />
-                        <input className="w-full outline-none" placeholder="Search products..." />
+                        <input
+                            className="w-full outline-none"
+                            placeholder="Search products..."
+                            value={search}
+                            onChange={(e) => setSearch(e.target.value)}
+                        />
                     </div>
                 </Card>
 
@@ -62,6 +94,8 @@ export function CatalogPage() {
                     <SelectField
                         label="Category"
                         options={["All", "Skincare", "Makeup", "Cleansing"]}
+                        value={category}
+                        onChange={(e) => setCategory(e.target.value)}
                     />
                 </Card>
 
@@ -69,6 +103,8 @@ export function CatalogPage() {
                     <SelectField
                         label="Sort by"
                         options={["Newest", "Price: low to high", "Price: high to low"]}
+                        value={sort}
+                        onChange={(e) => setSort(e.target.value)}
                     />
                 </Card>
             </div>
@@ -83,7 +119,7 @@ export function CatalogPage() {
                 <>
                     <div className="space-y-4">
                         {products.map((product) => (
-                            <ProductRow key={product.id} product={product} />
+                            <ProductRow key={product.id} product={product} isSeller={isSeller} />
                         ))}
                     </div>
 
